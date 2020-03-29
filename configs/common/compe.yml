@@ -1,0 +1,5 @@
+compe:
+    compe_name: digit-recognizer
+    target_name: label
+    id_name: 
+    metrics: accuracy

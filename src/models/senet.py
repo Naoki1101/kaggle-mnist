@@ -331,23 +331,23 @@ def initialize_pretrained_model(model, num_classes, settings):
     model.std = settings['std']
 
 
-def se_resnext50_32x4d(num_classes=1000, pretrained='imagenet'):
+def se_resnext50_32x4d(num_classes=1000, pretrained=True):
     model = SENet(SEResNeXtBottleneck, [3, 4, 6, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,
                   downsample_kernel_size=1, downsample_padding=0,
                   num_classes=num_classes)
-    if pretrained is not None:
-        settings = pretrained_settings['se_resnext50_32x4d'][pretrained]
+    if pretrained:
+        settings = pretrained_settings['se_resnext50_32x4d']['imagenet']
         initialize_pretrained_model(model, num_classes, settings)
     return model
 
 
-def se_resnext101_32x4d(num_classes=1000, pretrained='imagenet'):
+def se_resnext101_32x4d(num_classes=1000, pretrained=False):
     model = SENet(SEResNeXtBottleneck, [3, 4, 23, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,
                   downsample_kernel_size=1, downsample_padding=0,
                   num_classes=num_classes)
-    if pretrained is not None:
-        settings = pretrained_settings['se_resnext101_32x4d'][pretrained]
+    if pretrained:
+        settings = pretrained_settings['se_resnext101_32x4d']['imagenet']
         initialize_pretrained_model(model, num_classes, settings)
     return model
