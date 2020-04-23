@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import layer
-from models import densenet, efficientnet, mobilenet, resnet, senet
+from models import densenet, efficientnet, mobilenet, resnet, resnest, senet
 from dataset.custom_dataset import CustomDataset
 
 model_encoder = {
@@ -34,6 +34,12 @@ model_encoder = {
     'wide_resnet50_2': resnet.wide_resnet50_2,
     'wide_resnet101_2': resnet.wide_resnet101_2,
 
+    # resnest
+    'resnest50': resnest.resnest50,
+    'resnest101': resnest.resnest101,
+    'resnest200': resnest.resnest200,
+    'resnest269': resnest.resnest269,
+
     # senet
     'se_resnext50_32x4d': senet.se_resnext50_32x4d,
     'se_resnext101_32x4d': senet.se_resnext101_32x4d,
@@ -62,6 +68,8 @@ def replace_channels(model, cfg):
         set_channels(model.layer0.conv1, cfg)
     elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet'):
         set_channels(model.conv1, cfg)
+    elif cfg.model.name.startswith('resnest'):
+        set_channels(model.conv1[0], cfg)
 
 
 def replace_fc(model, cfg):
@@ -82,7 +90,7 @@ def replace_fc(model, cfg):
     elif cfg.model.name.startswith('se_resnext'):
         fc_input = getattr(model.last_linear, 'in_features')
         model.last_linear = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet'):
+    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
         fc_input = getattr(model.fc, 'in_features')
         model.fc = nn.Linear(fc_input, classes)
     return model
@@ -94,7 +102,7 @@ def replace_pool(model, cfg):
         model._avg_pooling = avgpool
     elif cfg.model.name.startswith('se_resnext'):
         model.avg_pool = avgpool
-    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet'):
+    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
         model.avgpool = avgpool
     return model
 

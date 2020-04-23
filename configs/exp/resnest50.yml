@@ -1,0 +1,73 @@
+common:
+    input_root: ../data/input/
+    img_file: train.csv
+    seed: &vars 2020
+    drop_fname:
+
+model:
+    name: resnest50
+    n_channels: 1
+    n_classes: 10
+    pretrained: True
+    avgpool:
+        name: GeM
+        params: {}
+    metric:
+
+data:
+    train:
+        dataset_type: CustomDataset
+        img_size:
+            width: &wsize 56
+            height: &hsize 56
+        n_channels: 1
+        epochs: 30
+        loader:
+            shuffle: True
+            batch_size: 128
+            num_workers: 4
+        transforms:
+            rotate:
+                name: Rotate
+                params:
+                    p: 0.5
+                    limit: 10
+    valid:
+        dataset_type: CustomDataset
+        img_size:
+            width: *wsize
+            height: *hsize
+        n_channels: 1
+        loader:
+            shuffle: False
+            batch_size: 128
+            num_workers: 4
+        transforms:
+    test:
+        dataset_type: CustomDataset
+        img_size:
+            width: *wsize
+            height: *hsize
+        n_channels: 1
+        loader:
+            shuffle: False
+            batch_size: 128
+            num_workers: 4
+        transforms:
+
+loss: 
+    name: CrossEntropyLoss
+    params: {}
+
+optimizer:
+    name: SGD
+    params:
+        lr: 0.01
+        momentum: 0.9
+        weight_decay: 0.0001
+
+scheduler:
+    name: CosineAnnealingLR
+    params:
+        eta_min: 0.00001
+        T_max: 30
