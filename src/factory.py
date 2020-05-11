@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import layer
-from models import densenet, efficientnet, mobilenet, resnet, resnest, senet
+from models import (densenet, efficientnet, ghostnet, mobilenet, resnet, resnest, senet)
 from dataset.custom_dataset import CustomDataset
 
 model_encoder = {
@@ -19,6 +19,9 @@ model_encoder = {
     'efficientnet_b5': efficientnet.efficientnet_b5,
     'efficientnet_b6': efficientnet.efficientnet_b6,
     'efficientnet_b7': efficientnet.efficientnet_b7,
+
+    # ghostnet
+    'ghostnet': ghostnet.ghost_net,
 
     # mobilenet
     'mobilenet': mobilenet.mobilenet_v2,
@@ -70,6 +73,8 @@ def replace_channels(model, cfg):
         set_channels(model.conv1, cfg)
     elif cfg.model.name.startswith('resnest'):
         set_channels(model.conv1[0], cfg)
+    elif cfg.model.name.startswith('ghostnet'):
+        set_channels(model.features[0][0], cfg)
 
 
 def replace_fc(model, cfg):
@@ -93,6 +98,9 @@ def replace_fc(model, cfg):
     elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
         fc_input = getattr(model.fc, 'in_features')
         model.fc = nn.Linear(fc_input, classes)
+    elif cfg.model.name.startswith('ghostnet'):
+        fc_input = getattr(model.classifier[-1], 'in_features')
+        model.classifier[-1] = nn.Linear(fc_input, classes)
     return model
 
 
@@ -104,6 +112,8 @@ def replace_pool(model, cfg):
         model.avg_pool = avgpool
     elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
         model.avgpool = avgpool
+    elif cfg.model.name.startswith('ghostnet'):
+        model.squeeze[-1] = avgpool
     return model
 
 

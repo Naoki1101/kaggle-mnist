@@ -30,4 +30,11 @@ cd ../src
 # python train.py -m 'resnest50' -c 'test'
 # python train.py -m 'resnest101' -c 'test'
 # python train.py -m 'resnest200' -c 'test'
-python train.py -m 'resnest269' -c 'test'
+# python train.py -m 'resnest269' -c 'test'
+
+python train.py -m 'ghostnet' -c 'test'
+
+cd ../
+git add -A
+git commit -m '...'
+git push
