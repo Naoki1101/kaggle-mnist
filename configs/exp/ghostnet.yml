@@ -8,7 +8,7 @@ model:
     name: ghostnet
     n_channels: 1
     n_classes: 10
-    pretrained: True
+    pretrained: False
     avgpool:
         name: GeM
         params: {}
