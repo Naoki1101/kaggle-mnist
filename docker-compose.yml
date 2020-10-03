@@ -1,0 +1,13 @@
+version: "3"
+services:
+  test:
+    build: .
+    volumes:
+      - $PWD:/working
+    container_name: mnist
+    working_dir: /working
+    ports:
+      - 8080:8080
+    environment:
+      - PYTHONPATH=/working
+    tty: true

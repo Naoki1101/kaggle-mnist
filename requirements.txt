@@ -1,0 +1,10 @@
+albumentations
+efficientnet_pytorch
+seaborn
+notion
+dropbox
+requests
+fastprogress
+easydict
+PyYAML
+kaggle

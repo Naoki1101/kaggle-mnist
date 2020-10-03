@@ -18,7 +18,7 @@ def get_transforms(cfg):
 
 
 class CustomDataset(Dataset):
-    
+
     def __init__(self, df, labels, cfg, is_train=True):
         self.cfg = cfg
         self.data = df.values
@@ -26,10 +26,10 @@ class CustomDataset(Dataset):
         self.n_channels = cfg.n_channels
         self.transforms = get_transforms(self.cfg)
         self.is_train = is_train
-        
+
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, idx):
         image = self.data[idx, :].reshape(28, 28).astype(np.uint8)
         image = (image*(255.0/image.max())).astype(np.uint8)
