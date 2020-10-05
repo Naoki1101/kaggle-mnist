@@ -1,7 +1,4 @@
-notebooks/*
-!Metric*.ipynb
-!Grad-CAM.ipynb
-!simple_*.ipynb
+notebooks/
 
 logs/
 data/
