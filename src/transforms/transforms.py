@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import albumentations as album
 from albumentations.core.transforms_interface import ImageOnlyTransform, DualTransform
 from albumentations.augmentations import functional as F
 import cv2
@@ -32,7 +31,7 @@ class RandomMorph(ImageOnlyTransform):
 # https://www.kaggle.com/haqishen/gridmask
 class GridMask(DualTransform):
     """GridMask augmentation for image classification and object detection.
-    
+
     Author: Qishen Ha
     Email: haqishen@gmail.com
     2020/01/29
@@ -78,16 +77,10 @@ class GridMask(DualTransform):
                 this_mask = np.ones((int((n_g + 1) * grid_h), int((n_g + 1) * grid_w))).astype(np.uint8)
                 for i in range(n_g + 1):
                     for j in range(n_g + 1):
-                        this_mask[
-                             int(i * grid_h) : int(i * grid_h + grid_h / 2),
-                             int(j * grid_w) : int(j * grid_w + grid_w / 2)
-                        ] = self.fill_value
+                        this_mask[int(i * grid_h): int(i * grid_h + grid_h / 2), int(j * grid_w): int(j * grid_w + grid_w / 2)] = self.fill_value
                         if self.mode == 2:
-                            this_mask[
-                                 int(i * grid_h + grid_h / 2) : int(i * grid_h + grid_h),
-                                 int(j * grid_w + grid_w / 2) : int(j * grid_w + grid_w)
-                            ] = self.fill_value
-                
+                            this_mask[int(i * grid_h + grid_h / 2) : int(i * grid_h + grid_h), int(j * grid_w + grid_w / 2): int(j * grid_w + grid_w)] = self.fill_value
+
                 if self.mode == 1:
                     this_mask = 1 - this_mask
 
@@ -98,8 +91,8 @@ class GridMask(DualTransform):
     def apply(self, image, mask, rand_h, rand_w, angle, **params):
         h, w = image.shape[:2]
         mask = F.rotate(mask, angle) if self.rotate[1] > 0 else mask
-        mask = mask[:,:,np.newaxis] if image.ndim == 3 else mask
-        image *= mask[rand_h:rand_h+h, rand_w:rand_w+w].astype(image.dtype)
+        mask = mask[:, :, np.newaxis] if image.ndim == 3 else mask
+        image *= mask[rand_h:rand_h + h, rand_w: rand_w + w].astype(image.dtype)
         return image
 
     def get_params_dependent_on_targets(self, params):

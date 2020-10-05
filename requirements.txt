@@ -8,3 +8,8 @@ fastprogress
 easydict
 PyYAML
 kaggle
+optuna
+joblib
+easydict
+GitPython
+rfconv

@@ -1,7 +1,11 @@
+import sys
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
 import albumentations as album
+
+sys.path.append('../src')
+import const
 
 
 def get_transforms(cfg):
@@ -18,27 +22,27 @@ def get_transforms(cfg):
 
 
 class CustomDataset(Dataset):
-
-    def __init__(self, df, labels, cfg, is_train=True):
+    def __init__(self, df, cfg):
         self.cfg = cfg
-        self.data = df.values
-        self.labels = labels.values
-        self.n_channels = cfg.n_channels
+        self.data = df[const.PIXEL_COLS].values
         self.transforms = get_transforms(self.cfg)
-        self.is_train = is_train
+        self.is_train = False
+
+        if const.TARGET_COL in df.columns:
+            self.labels = df[const.TARGET_COL].values
+            self.is_train = True
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        image = self.data[idx, :].reshape(28, 28).astype(np.uint8)
-        image = (image*(255.0/image.max())).astype(np.uint8)
+        image = self.data[idx].reshape(28, 28).astype(np.uint8)
+        image = (image * (255.0 / image.max())).astype(np.uint8)
         image = cv2.resize(image, dsize=(self.cfg.img_size.height, self.cfg.img_size.width))
         if self.transforms:
             image = self.transforms(image=image)['image']
+
         image = image.reshape(1, self.cfg.img_size.width, self.cfg.img_size.height).astype(np.float32)
-        if self.n_channels == 3:
-            image = np.concatenate([image for i in range(self.n_channels)], axis=0)
 
         if self.is_train:
             label = self.labels[idx]

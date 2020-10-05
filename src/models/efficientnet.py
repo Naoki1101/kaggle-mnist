@@ -1,6 +1,4 @@
-import torch.nn as nn
 from efficientnet_pytorch import EfficientNet
-from efficientnet_pytorch.utils import MemoryEfficientSwish
 
 
 def _efficientnet(model_name, pretrained):
@@ -8,7 +6,7 @@ def _efficientnet(model_name, pretrained):
         model = EfficientNet.from_pretrained(model_name, advprop=True)
     else:
         model = EfficientNet.from_name(model_name)
-    
+
     return model
 
 

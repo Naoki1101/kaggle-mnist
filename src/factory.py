@@ -1,139 +1,136 @@
+import sys
+import numpy as np
+import pandas as pd
+from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import albumentations as album
 
-import layer
-from models import (densenet, efficientnet, ghostnet, mobilenet, resnet, resnest, senet)
+sys.path.append('../src')
+import loss
+import models
+import metrics
+import validation
+from utils import reduce_mem_usage, DataHandler
 from dataset.custom_dataset import CustomDataset
+from models.custom_model import CustomModel
 
-model_encoder = {
-    # densenet
-    'densenet121': densenet.densenet121,
-
-    # efficientnet
-    'efficientnet_b0': efficientnet.efficientnet_b0,
-    'efficientnet_b1': efficientnet.efficientnet_b1,
-    'efficientnet_b2': efficientnet.efficientnet_b2,
-    'efficientnet_b3': efficientnet.efficientnet_b3,
-    'efficientnet_b4': efficientnet.efficientnet_b4,
-    'efficientnet_b5': efficientnet.efficientnet_b5,
-    'efficientnet_b6': efficientnet.efficientnet_b6,
-    'efficientnet_b7': efficientnet.efficientnet_b7,
-
-    # ghostnet
-    'ghostnet': ghostnet.ghost_net,
-
-    # mobilenet
-    'mobilenet': mobilenet.mobilenet_v2,
-
-    # resnet
-    'resnet18': resnet.resnet18,
-    'resnet34': resnet.resnet34,
-    'resnet50': resnet.resnet50,
-    'resnet101': resnet.resnet101,
-    'resnet152': resnet.resnet152,
-    'resnext50_32x4d': resnet.resnext50_32x4d,
-    'resnext101_32x8d': resnet.resnext101_32x8d,
-    'wide_resnet50_2': resnet.wide_resnet50_2,
-    'wide_resnet101_2': resnet.wide_resnet101_2,
-
-    # resnest
-    'resnest50': resnest.resnest50,
-    'resnest101': resnest.resnest101,
-    'resnest200': resnest.resnest200,
-    'resnest269': resnest.resnest269,
-
-    # senet
-    'se_resnext50_32x4d': senet.se_resnext50_32x4d,
-    'se_resnext101_32x4d': senet.se_resnext101_32x4d,
-}
+dh = DataHandler()
 
 
-def set_channels(child, cfg):
-    if cfg.model.n_channels < 3:
-        child_weight = child.weight.data[:, :cfg.model.n_channels, :, :]
+def get_fold(cfg, df):
+    df_ = df.copy()
+
+    for col in [cfg.split.y, cfg.split.groups]:
+        if col and col not in df_.columns:
+            feat = dh.load(f'../features/{col}.feather')
+            df_[col] = feat[col]
+
+    fold_df = pd.DataFrame(index=range(len(df_)))
+
+    if len(cfg.weight) == 1:
+        weight_list = [cfg.weight[0] for i in range(cfg.params.n_splits)]
     else:
-        child_weight = torch.cat([child.weight.data[:, :, :, :], child.weight.data[:, :int(cfg.model.n_channels - 3), :, :]], dim=1)
-    setattr(child, 'in_channels', cfg.model.n_channels)
+        weight_list = cfg.weight
 
-    if cfg.model.pretrained:
-        setattr(child.weight, 'data', child_weight)
+    fold = getattr(validation, cfg.name)(cfg)
+    for fold_, (trn_idx, val_idx) in enumerate(fold.split(df_)):
+        fold_df[f'fold_{fold_}'] = 0
+        fold_df.loc[val_idx, f'fold_{fold_}'] = weight_list[fold_]
 
-
-def replace_channels(model, cfg):
-    if cfg.model.name.startswith('densenet'):
-        set_channels(model.features[0], cfg)
-    elif cfg.model.name.startswith('efficientnet'):
-        set_channels(model._conv_stem, cfg)
-    elif cfg.model.name.startswith('mobilenet'):
-        set_channels(model.features[0][0], cfg)
-    elif cfg.model.name.startswith('se_resnext'):
-        set_channels(model.layer0.conv1, cfg)
-    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet'):
-        set_channels(model.conv1, cfg)
-    elif cfg.model.name.startswith('resnest'):
-        set_channels(model.conv1[0], cfg)
-    elif cfg.model.name.startswith('ghostnet'):
-        set_channels(model.features[0][0], cfg)
-
-
-def replace_fc(model, cfg):
-    if cfg.model.metric:
-        classes = 1000
-    else:
-        classes = cfg.model.n_classes
-
-    if cfg.model.name.startswith('densenet'):
-        fc_input = getattr(model.classifier, 'in_features')
-        model.classifier = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('efficientnet'):
-        fc_input = getattr(model._fc, 'in_features')
-        model._fc = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('mobilenet'):
-        fc_input = getattr(model.classifier[1], 'in_features')
-        model.classifier[1] = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('se_resnext'):
-        fc_input = getattr(model.last_linear, 'in_features')
-        model.last_linear = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
-        fc_input = getattr(model.fc, 'in_features')
-        model.fc = nn.Linear(fc_input, classes)
-    elif cfg.model.name.startswith('ghostnet'):
-        fc_input = getattr(model.classifier[-1], 'in_features')
-        model.classifier[-1] = nn.Linear(fc_input, classes)
-    return model
-
-
-def replace_pool(model, cfg):
-    avgpool = getattr(layer, cfg.model.avgpool.name)(**cfg.model.avgpool.params)
-    if cfg.model.name.startswith('efficientnet'):
-        model._avg_pooling = avgpool
-    elif cfg.model.name.startswith('se_resnext'):
-        model.avg_pool = avgpool
-    elif cfg.model.name.startswith('resnet') or cfg.model.name.startswith('resnex') or cfg.model.name.startswith('wide_resnet') or cfg.model.name.startswith('resnest'):
-        model.avgpool = avgpool
-    elif cfg.model.name.startswith('ghostnet'):
-        model.squeeze[-1] = avgpool
-    return model
+    return fold_df
 
 
 def get_model(cfg):
-    model = model_encoder[cfg.model.name](pretrained=cfg.model.pretrained)
-    if cfg.model.n_channels != 3:
-        replace_channels(model, cfg)
-    model = replace_fc(model, cfg)
-    if cfg.model.avgpool:
-        model = replace_pool(model, cfg)
+    model = getattr(models, cfg.name)(cfg=cfg)
+    return model
+
+
+def get_metrics(cfg):
+    evaluator = getattr(metrics, cfg)
+    return evaluator
+
+
+def fill_dropped(dropped_array, drop_idx):
+    filled_array = np.zeros((len(dropped_array) + len(drop_idx), dropped_array.shape[1]))
+    idx_array = np.arange(len(filled_array))
+    use_idx = np.delete(idx_array, drop_idx)
+    filled_array[use_idx, :] = dropped_array
+    return filled_array
+
+
+def get_features(features, cfg):
+    dfs = [dh.load(f'../features/{f}_{cfg.data_type}.feather') for f in features if f is not None]
+    df = pd.concat(dfs, axis=1)
+    if cfg.reduce:
+        df = reduce_mem_usage(df)
+    return df
+
+
+def get_result(log_name, cfg):
+    log_dir = Path(f'../logs/{log_name}')
+
+    model_oof = dh.load(log_dir / 'oof.npy')
+    model_cfg = dh.load(log_dir / 'config.yml')
+
+    if model_cfg.common.drop:
+        drop_name_list = []
+        for drop_name in model_cfg.common.drop:
+            if 'exploded' not in drop_name:
+                drop_name = f'exploded_{drop_name}'
+            drop_name_list.append(drop_name)
+
+        drop_idxs = get_drop_idx(drop_name_list)
+        model_oof = fill_dropped(model_oof, drop_idxs)
+
+    model_preds = dh.load(log_dir / 'raw_preds.npy')
+
+    return model_oof, model_preds
+
+
+def get_target(cfg):
+    target = pd.read_feather(f'../features/{cfg.name}.feather')
+    if cfg.convert_type is not None:
+        target = getattr(np, cfg.convert_type)(target)
+    return target
+
+
+def get_drop_idx(cfg):
+    drop_idx_list = []
+    for drop_name in cfg:
+        drop_idx = np.load(f'../pickle/{drop_name}.npy')
+        drop_idx_list.append(drop_idx)
+    all_drop_idx = np.unique(np.concatenate(drop_idx_list))
+    return all_drop_idx
+
+
+def get_ad(cfg, train_df, test_df):
+    whole_df = pd.concat([train_df, test_df], axis=0, sort=False).reset_index(drop=True)
+    target = np.concatenate([np.zeros(len(train_df)), np.ones(len(test_df))])
+    target_df = pd.DataFrame({f'{cfg.data.target.name}': target.astype(int)})
+    return whole_df, target_df
+
+
+def get_nn_model(cfg, is_train=True):
+    model = CustomModel(cfg)
+
+    if cfg.model.multi_gpu and is_train:
+        model = nn.DataParallel(model)
+
     return model
 
 
 def get_loss(cfg):
-    loss = getattr(nn, cfg.loss.name)(**cfg.loss.params)
-    return loss
+    if hasattr(nn, cfg.loss.name):
+        loss_ = getattr(nn, cfg.loss.name)(**cfg.loss.params)
+    elif hasattr(loss, cfg.loss.name):
+        loss_ = getattr(loss, cfg.loss.name)(**cfg.loss.params)
+    return loss_
 
 
-def get_dataloader(df, labels, cfg):
-    dataset = CustomDataset(df, labels, cfg)
+def get_dataloader(df, cfg):
+    dataset = CustomDataset(df, cfg)
     loader = DataLoader(dataset, **cfg.loader)
     return loader
 
@@ -155,3 +152,16 @@ def get_scheduler(cfg, optimizer):
             **cfg.scheduler.params,
         )
     return scheduler
+
+
+def get_transforms(cfg):
+    def get_object(transform):
+        if hasattr(album, transform.name):
+            return getattr(album, transform.name)
+        else:
+            return eval(transform.name)
+    if cfg.transforms:
+        transforms = [get_object(transform)(**transform.params) for name, transform in cfg.transforms.items()]
+        return album.Compose(transforms)
+    else:
+        return None

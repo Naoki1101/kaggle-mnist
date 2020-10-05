@@ -1,40 +1,36 @@
 cd ../src
-# python train.py -m 'resnet18' -c 'test'
-# python train.py -m 'resnet34' -c 'test'
-# python train.py -m 'resnet50' -c 'test'
-# python train.py -m 'resnet101' -c 'test'
-# python train.py -m 'resnet152' -c 'test'
-# python train.py -m 'resnext50_32x4d' -c 'test'
-# python train.py -m 'resnext101_32x8d' -c 'test'
-# python train.py -m 'wide_resnet50_2' -c 'test'
-# python train.py -m 'wide_resnet101_2' -c 'test'
 
-# python train.py -m 'se_resnext50_32x4d' -c 'test'
-# python train.py -m 'se_resnext101_32x4d' -c 'test'
+# python train.py -m 'resnet18_001' -c 'test'
+# python train.py -m 'resnet34_001' -c 'test'
+# python train.py -m 'resnet50_001' -c 'test'
+# python train.py -m 'resnet101_001' -c 'test'
+# python train.py -m 'resnet152_001' -c 'test'
+# python train.py -m 'resnext50_32x4d_001' -c 'test'
+# python train.py -m 'resnext101_32x8d_001' -c 'test'
+# python train.py -m 'wide_resnet50_2_001' -c 'test'
+# python train.py -m 'wide_resnet101_2_001' -c 'test'
 
-# python train.py -m 'densenet121' -c 'test'
+# python train.py -m 'se_resnext50_32x4d_001' -c 'test'
+# python train.py -m 'se_resnext101_32x4d_001' -c 'test'
 
-# python train.py -m 'mobilenet' -c 'test'
+# python train.py -m 'densenet121_001' -c 'test'
 
-# python train.py -m 'efficientnet_b0' -c 'test'
-# python train.py -m 'efficientnet_b1' -c 'test'
-# python train.py -m 'efficientnet_b2' -c 'test'
-# python train.py -m 'efficientnet_b3' -c 'test'
-# python train.py -m 'efficientnet_b4' -c 'test'
-# python train.py -m 'efficientnet_b5' -c 'test'
-# python train.py -m 'efficientnet_b6' -c 'test'
-# python train.py -m 'efficientnet_b7' -c 'test'
+# python train.py -m 'mobilenet_001' -c 'test'
 
-# python train.py -m 'arcface_resnet50' -c 'test'
+# python train.py -m 'efficientnet_b0_001' -c 'test'
+# python train.py -m 'efficientnet_b1_001' -c 'test'
+# python train.py -m 'efficientnet_b2_001' -c 'test'
+# python train.py -m 'efficientnet_b3_001' -c 'test'
+# python train.py -m 'efficientnet_b4_001' -c 'test'
+# python train.py -m 'efficientnet_b5_001' -c 'test'
+# python train.py -m 'efficientnet_b6_001' -c 'test'
+# python train.py -m 'efficientnet_b7_001' -c 'test'
 
-# python train.py -m 'resnest50' -c 'test'
-# python train.py -m 'resnest101' -c 'test'
-# python train.py -m 'resnest200' -c 'test'
-# python train.py -m 'resnest269' -c 'test'
+# python train.py -m 'resnest50_001' -c 'test'
+# python train.py -m 'resnest101_001' -c 'test'
+# python train.py -m 'resnest200_001' -c 'test'
+# python train.py -m 'resnest269_001' -c 'test'
 
-python train.py -m 'ghostnet' -c 'test'
+# python train.py -m 'resnest50_frelu_001' -c 'test'
 
-cd ../
-git add -A
-git commit -m '...'
-git push origin master
+python train.py -m 'ghostnet_001' -c 'test'

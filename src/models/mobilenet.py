@@ -9,8 +9,8 @@ model_urls = {
     'mobilenet_v2': 'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
 }
 
-# Source: https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py
 
+# Source: https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py
 def _make_divisible(v, divisor, min_value=None):
     """
     This function is taken from the original tf repo.

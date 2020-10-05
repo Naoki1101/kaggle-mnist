@@ -1,18 +1,40 @@
 common:
-    input_root: ../data/input/
-    img_file: train.csv
-    seed: &vars 2020
-    drop_fname:
+    seed: &seed 2020
+    metrics:
+        name: accuracy
+        params: {}
+    drop:
+    kaggle:
+        submit: False
 
 model:
-    name: efficientnet_b7
+    backbone: resnet101
     n_channels: 1
-    n_classes: 10
+    n_classes: &class 10
+    epochs: &epoch 20
     pretrained: True
+    multi_gpu: True
     avgpool:
         name: GeM
         params: {}
-    metric:
+    head:
+        linear:
+            name: Linear
+            params:
+                in_features: 2048
+                out_features: *class
+
+validation:
+    name: KFold
+    params:
+        n_splits: 5
+        random_state: *seed
+    split:
+        y: label
+        groups:
+    weight:
+        - 0.2
+    single: True
 
 data:
     train:
@@ -20,11 +42,9 @@ data:
         img_size:
             width: &wsize 56
             height: &hsize 56
-        n_channels: 1
-        epochs: 30
         loader:
             shuffle: True
-            batch_size: 64
+            batch_size: 128
             num_workers: 4
         transforms:
             rotate:
@@ -37,23 +57,25 @@ data:
         img_size:
             width: *wsize
             height: *hsize
-        n_channels: 1
         loader:
             shuffle: False
-            batch_size: 64
+            batch_size: 128
             num_workers: 4
         transforms:
+        tta:
+            iter_num: 1
     test:
         dataset_type: CustomDataset
         img_size:
             width: *wsize
             height: *hsize
-        n_channels: 1
         loader:
             shuffle: False
-            batch_size: 64
+            batch_size: 128
             num_workers: 4
         transforms:
+        tta:
+            iter_num: 1
 
 loss: 
     name: CrossEntropyLoss
@@ -70,4 +92,4 @@ scheduler:
     name: CosineAnnealingLR
     params:
         eta_min: 0.00001
-        T_max: 30
+        T_max: *epoch

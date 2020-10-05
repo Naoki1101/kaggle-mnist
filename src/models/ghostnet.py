@@ -33,10 +33,9 @@ class SELayer(nn.Module):
     def __init__(self, channel, reduction=4):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-                nn.Linear(channel, channel // reduction),
-                nn.ReLU(inplace=True),
-                nn.Linear(channel // reduction, channel),        )
+        self.fc = nn.Sequential(nn.Linear(channel, channel // reduction),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(channel // reduction, channel))
 
     def forward(self, x):
         b, c, _, _ = x.size()
@@ -48,26 +47,27 @@ class SELayer(nn.Module):
 
 def depthwise_conv(inp, oup, kernel_size=3, stride=1, relu=False):
     return nn.Sequential(
-        nn.Conv2d(inp, oup, kernel_size, stride, kernel_size//2, groups=inp, bias=False),
+        nn.Conv2d(inp, oup, kernel_size, stride, kernel_size // 2, groups=inp, bias=False),
         nn.BatchNorm2d(oup),
         nn.ReLU(inplace=True) if relu else nn.Sequential(),
     )
+
 
 class GhostModule(nn.Module):
     def __init__(self, inp, oup, kernel_size=1, ratio=2, dw_size=3, stride=1, relu=True):
         super(GhostModule, self).__init__()
         self.oup = oup
         init_channels = math.ceil(oup / ratio)
-        new_channels = init_channels*(ratio-1)
+        new_channels = init_channels * (ratio - 1)
 
         self.primary_conv = nn.Sequential(
-            nn.Conv2d(inp, init_channels, kernel_size, stride, kernel_size//2, bias=False),
+            nn.Conv2d(inp, init_channels, kernel_size, stride, kernel_size // 2, bias=False),
             nn.BatchNorm2d(init_channels),
             nn.ReLU(inplace=True) if relu else nn.Sequential(),
         )
 
         self.cheap_operation = nn.Sequential(
-            nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size//2, groups=init_channels, bias=False),
+            nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size // 2, groups=init_channels, bias=False),
             nn.BatchNorm2d(new_channels),
             nn.ReLU(inplace=True) if relu else nn.Sequential(),
         )
@@ -75,8 +75,8 @@ class GhostModule(nn.Module):
     def forward(self, x):
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
-        out = torch.cat([x1,x2], dim=1)
-        return out[:,:self.oup,:,:]
+        out = torch.cat([x1, x2], dim=1)
+        return out[:, :self.oup, :, :]
 
 
 class GhostBottleneck(nn.Module):
@@ -88,7 +88,7 @@ class GhostBottleneck(nn.Module):
             # pw
             GhostModule(inp, hidden_dim, kernel_size=1, relu=True),
             # dw
-            depthwise_conv(hidden_dim, hidden_dim, kernel_size, stride, relu=False) if stride==2 else nn.Sequential(),
+            depthwise_conv(hidden_dim, hidden_dim, kernel_size, stride, relu=False) if stride == 2 else nn.Sequential(),
             # Squeeze-and-Excite
             SELayer(hidden_dim) if use_se else nn.Sequential(),
             # pw-linear
@@ -174,16 +174,16 @@ def ghost_net(**kwargs):
     Constructs a MobileNetV3-Large model
     """
     cfgs = [
-        # k, t, c, SE, s 
-        [3,  16,  16, 0, 1],
-        [3,  48,  24, 0, 2],
-        [3,  72,  24, 0, 1],
-        [5,  72,  40, 1, 2],
-        [5, 120,  40, 1, 1],
-        [3, 240,  80, 0, 2],
-        [3, 200,  80, 0, 1],
-        [3, 184,  80, 0, 1],
-        [3, 184,  80, 0, 1],
+        # k, t, c, SE, s
+        [3, 16, 16, 0, 1],
+        [3, 48, 24, 0, 2],
+        [3, 72, 24, 0, 1],
+        [5, 72, 40, 1, 2],
+        [5, 120, 40, 1, 1],
+        [3, 240, 80, 0, 2],
+        [3, 200, 80, 0, 1],
+        [3, 184, 80, 0, 1],
+        [3, 184, 80, 0, 1],
         [3, 480, 112, 1, 1],
         [3, 672, 112, 1, 1],
         [5, 672, 160, 1, 2],

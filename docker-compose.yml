@@ -1,7 +1,8 @@
-version: "3"
+version: "2.4"
 services:
   test:
     build: .
+    runtime: nvidia
     volumes:
       - $PWD:/working
     container_name: mnist
@@ -10,4 +11,5 @@ services:
       - 8080:8080
     environment:
       - PYTHONPATH=/working
+      - NVIDIA_VISIBLE_DEVICES=all
     tty: true
