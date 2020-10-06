@@ -78,7 +78,7 @@ def main():
     with t.timer('make submission'):
         make_submission(run_name=run_name_cv,
                         y_pred=preds,
-                        target_name=const.TARGET_COL,
+                        target_name='Label',
                         comp=False)
         if cfg.common.kaggle.submit:
             kaggle = Kaggle(cfg.compe.name, run_name_cv)
