@@ -8,12 +8,19 @@ common:
         submit: False
 
 model:
-    backbone: efficientnet_b7
-    n_channels: 1
+    backbone: vit
+    n_channels: &channel 1
     n_classes: &class 10
-    epochs: &epoch 20
+    epochs: &epoch 100
     params: 
-        pretrained: True
+        image_size: &img_size 56
+        patch_size: 7   # 56 / 8
+        num_classes: *class
+        dim: 1024
+        depth: 6
+        heads: 8
+        mlp_dim: 2048
+        channels: *channel
     multi_gpu: True
     avgpool:
         name: GeM
@@ -22,7 +29,7 @@ model:
         linear:
             name: Linear
             params:
-                in_features: 2560
+                in_features: 1024
                 out_features: *class
 
 validation:
@@ -41,8 +48,8 @@ data:
     train:
         dataset_type: CustomDataset
         img_size:
-            width: &wsize 56
-            height: &hsize 56
+            width: *img_size
+            height: *img_size
         loader:
             shuffle: True
             batch_size: 128
@@ -56,8 +63,8 @@ data:
     valid:
         dataset_type: CustomDataset
         img_size:
-            width: *wsize
-            height: *hsize
+            width: *img_size
+            height: *img_size
         loader:
             shuffle: False
             batch_size: 128
@@ -68,8 +75,8 @@ data:
     test:
         dataset_type: CustomDataset
         img_size:
-            width: *wsize
-            height: *hsize
+            width: *img_size
+            height: *img_size
         loader:
             shuffle: False
             batch_size: 128
@@ -85,7 +92,7 @@ loss:
 optimizer:
     name: SGD
     params:
-        lr: 0.01
+        lr: 0.05
         momentum: 0.9
         weight_decay: 0.0001
 

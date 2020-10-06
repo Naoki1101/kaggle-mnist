@@ -1,5 +1,6 @@
 albumentations
 efficientnet_pytorch
+vit-pytorch
 seaborn
 notion
 dropbox

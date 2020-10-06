@@ -33,4 +33,6 @@ cd ../src
 
 # python train.py -m 'resnest50_frelu_001' -c 'test'
 
-python train.py -m 'ghostnet_001' -c 'test'
+# python train.py -m 'ghostnet_001' -c 'test'
+
+python train.py -m 'vit_001' -c 'test'

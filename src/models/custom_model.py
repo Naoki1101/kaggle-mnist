@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from . import (densenet, efficientnet, ghostnet, mobilenet,
-               resnest, resnet, senet)
+               resnest, resnet, senet, vit)
 
 sys.path.append('../src')
 
@@ -53,6 +53,9 @@ model_encoder = {
     # senet
     'se_resnext50_32x4d': senet.se_resnext50_32x4d,
     'se_resnext101_32x4d': senet.se_resnext101_32x4d,
+
+    # vit
+    'vit': vit.ViT,
 }
 
 
@@ -63,7 +66,7 @@ def set_channels(child, cfg):
         child_weight = torch.cat([child.weight.data[:, :, :, :], child.weight.data[:, :int(cfg.model.n_channels - 3), :, :]], dim=1)
     setattr(child, 'in_channels', cfg.model.n_channels)
 
-    if cfg.model.pretrained:
+    if cfg.model.params.pretrained:
         setattr(child.weight, 'data', child_weight)
 
 
@@ -117,6 +120,8 @@ def replace_fc(model, cfg):
         model.fc = get_head(cfg.model.head)
     elif cfg.model.backbone.startswith('ghostnet'):
         model.classifier = get_head(cfg.model.head)
+    elif cfg.model.backbone.startswith('vit'):
+        model.mlp_head = get_head(cfg.model.head)
 
     return model
 
@@ -140,7 +145,7 @@ def replace_pool(model, cfg):
 class CustomModel(nn.Module):
     def __init__(self, cfg):
         super(CustomModel, self).__init__()
-        self.base_model = model_encoder[cfg.model.backbone](pretrained=cfg.model.pretrained)
+        self.base_model = model_encoder[cfg.model.backbone](**cfg.model.params)
         if cfg.model.n_channels != 3:
             replace_channels(self.base_model, cfg)
         if cfg.model.avgpool:

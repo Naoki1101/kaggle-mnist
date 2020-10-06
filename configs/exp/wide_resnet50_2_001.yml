@@ -12,7 +12,8 @@ model:
     n_channels: 1
     n_classes: &class 10
     epochs: &epoch 20
-    pretrained: True
+    params: 
+        pretrained: True
     multi_gpu: True
     avgpool:
         name: GeM
