@@ -6,6 +6,9 @@ notebooks/*
 logs/
 data/
 pickle/
+.neptune/*
+configs/account.yml
+configs/notify.yml
 
 .flake8
 
@@ -148,3 +151,4 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+.gitsecret/keys/random_seed

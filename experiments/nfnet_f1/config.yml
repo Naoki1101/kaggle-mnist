@@ -1,0 +1,81 @@
+seed: &seed 2021
+metrics:
+    name: accuracy
+    params: {}
+drop: 
+kaggle:
+    submit: False
+epochs: &epochs 3
+
+model:
+    n_classes: 10
+    backbone: nfnet_f1
+    params:
+        pooling_name: GeM
+        args_pooling: {}
+
+validation:
+    name: StratifiedKFold
+    params:
+        n_splits: 5
+        random_state: *seed
+        shuffle: True
+    split:
+        y: label
+        groups:
+    weight: average
+    single: True
+
+data:
+    train:
+        img_size:
+            height: &height 224
+            width: &width 224
+        loader:
+            shuffle: True
+            batch_size: 32
+            num_workers: 4
+        transforms:
+            rotate:
+                name: Rotate
+                params:
+                    p: 0.5
+                    limit: 10
+        mixup: False
+    valid:
+        img_size:
+            height: *height
+            width: *width
+        loader:
+            shuffle: False
+            batch_size: 32
+            num_workers: 4
+        transforms:
+        tta:
+            iter_num: 1
+    test:
+        img_size:
+            height: *height
+            width: *width
+        loader:
+            shuffle: False
+            batch_size: 16
+            num_workers: 4
+        transforms:
+        tta:
+            iter_num: 1
+
+loss: 
+    name: CrossEntropyLoss
+    params: {}
+
+optimizer:
+    name: Adam
+    params:
+        lr: 0.001
+
+scheduler:
+    name: CosineAnnealingLR
+    params:
+        eta_min: 0.00001
+        T_max: *epochs

@@ -1,5 +1,0 @@
-compe:
-    compe_name: liverpool-ion-switching
-    target_name: signal
-    id_name: time
-    metrics: macro-f1

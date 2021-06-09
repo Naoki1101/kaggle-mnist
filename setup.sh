@@ -4,7 +4,6 @@ mkdir -p data
 mkdir -p data/input
 mkdir -p data/output
 mkdir -p logs
-mkdir -p pickle
 
 # download digit-recognizer
 cd ./data/input/

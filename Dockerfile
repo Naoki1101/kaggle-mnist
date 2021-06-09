@@ -24,8 +24,8 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
 RUN conda install pytorch torchvision cudatoolkit=10.1 -c pytorch && \
-    conda install jupyter ipykernel matplotlib pandas pillow scipy scikit-learn \
-          tqdm opencv joblib && \
+    conda install jupyter ipykernel matplotlib pandas pillow scipy scikit-learn tqdm opencv joblib && \
+    conda install -c conda-forge timm && \
     conda clean -p &&\
     conda clean -t &&\
     conda clean --yes --all
